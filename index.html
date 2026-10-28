@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0b0e">
+<meta name="description" content="Local car cruises, shows and meetups.">
+<title>CruiseNight</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="config.js"></script>
+<script>
+  (function () {   // apply the theme before first paint
+    var t = new URLSearchParams(location.search).get('theme') || CRUISE_CONFIG.THEME || 'chrome';
+    if (!/^(chrome|steel|neon|violet)$/.test(t)) t = 'chrome';
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+:root { --radius: 14px; --tabbar: 64px; --bad: #e5484d;
+  --brand-font: "Arial Narrow", "Roboto Condensed", system-ui, sans-serif; --brand-glow: none; }
+
+/* Themes. Pick one with THEME in config.js; ?theme=name previews another. */
+:root, [data-theme=chrome] {  /* Midnight Chrome: black, polished silver, electric blue */
+  color-scheme: dark;
+  --bg: #0a0b0e; --surface: #14161b; --surface2: #1c1f26; --line: #2a2e37; --hover-line: #3b404b;
+  --text: #f1f3f7; --muted: #a2a9b6; --accent: #6ea8ff; --accent-ink: #06122a; --err: #ffb3c8;
+  --cruise: #6ea8ff; --show: #f472b6; --meetup: #c4b5fd;
+  --header-bg: rgba(10,11,14,.92); --tab-bg: rgba(20,22,27,.96); --shadow: rgba(0,0,0,.55);
+  --good-bg: #12302a; --good-line: #1f5a4c; --good-text: #8ff0d0;
+  --bad-bg: #3a1526; --bad-line: #6a2a45; --bad-text: #ffb3c8;
+  --banner-bg: #101c33; --banner-line: #1f335a; --banner-text: #b9d3ff;
+  --logo-tile: #0a0b0e; --arch-hi: #ffffff; --arch-lo: #7d8796; --road: #1c1f26; --road-line: #d7dde6; --road-edge: #2a2e37;
+}
+[data-theme=steel] {          /* Gateway Steel: daylight, stainless arch, navy */
+  color-scheme: light;
+  --bg: #f3f5f8; --surface: #ffffff; --surface2: #eef1f5; --line: #d9dee6; --hover-line: #aeb7c4;
+  --text: #0f172a; --muted: #475569; --accent: #1e40af; --accent-ink: #ffffff; --err: #b91c1c;
+  --cruise: #1d4ed8; --show: #be185d; --meetup: #6d28d9;
+  --header-bg: rgba(255,255,255,.92); --tab-bg: rgba(255,255,255,.96); --shadow: rgba(15,23,42,.18);
+  --good-bg: #dcfce7; --good-line: #86efac; --good-text: #166534;
+  --bad-bg: #fee2e2; --bad-line: #fca5a5; --bad-text: #991b1b;
+  --banner-bg: #eef4ff; --banner-line: #c7d7fe; --banner-text: #1e3a8a;
+  --logo-tile: #0f1e3d; --arch-hi: #ffffff; --arch-lo: #8b97a6; --road: #1e2f55; --road-line: #e2e8f0; --road-edge: #2c3f6b;
+}
+[data-theme=neon] {           /* Route 66 Neon: diner-sign pink and cyan on midnight blue */
+  color-scheme: dark;
+  --bg: #0b0f24; --surface: #131a38; --surface2: #1b2349; --line: #2a3466; --hover-line: #3d4a8a;
+  --text: #eef2ff; --muted: #a5b0d6; --accent: #ff3ea5; --accent-ink: #1a0010; --err: #ffb3d0;
+  --cruise: #22d3ee; --show: #ff3ea5; --meetup: #a78bfa;
+  --header-bg: rgba(11,15,36,.92); --tab-bg: rgba(19,26,56,.96); --shadow: rgba(0,0,0,.55);
+  --good-bg: #123a3a; --good-line: #1f6a6a; --good-text: #8ff0e0;
+  --bad-bg: #3a1530; --bad-line: #6a2a58; --bad-text: #ffb3dd;
+  --banner-bg: #2a1838; --banner-line: #4d2a5e; --banner-text: #ffb3dd;
+  --logo-tile: #0b0f24; --arch-hi: #ffffff; --arch-lo: #ff3ea5; --road: #1b2349; --road-line: #22d3ee; --road-edge: #2a3466;
+  --brand-glow: 0 0 10px rgba(255,62,165,.55);
+}
+[data-theme=violet] {         /* Ultraviolet: black-cherry purple, silver, hot pink */
+  color-scheme: dark;
+  --bg: #0f0a1a; --surface: #181127; --surface2: #21183a; --line: #33264f; --hover-line: #4a3a70;
+  --text: #f4effc; --muted: #b6a9d0; --accent: #c77dff; --accent-ink: #16052a; --err: #ffb3d6;
+  --cruise: #c77dff; --show: #ff6fb5; --meetup: #7dd3fc;
+  --header-bg: rgba(15,10,26,.92); --tab-bg: rgba(24,17,39,.96); --shadow: rgba(0,0,0,.55);
+  --good-bg: #13302c; --good-line: #22584f; --good-text: #96f0d6;
+  --bad-bg: #3d1430; --bad-line: #6d2955; --bad-text: #ffb3d6;
+  --banner-bg: #24163d; --banner-line: #3d2766; --banner-text: #dcc6ff;
+  --logo-tile: #0f0a1a; --arch-hi: #ffffff; --arch-lo: #9d7bd8; --road: #21183a; --road-line: #ff6fb5; --road-edge: #33264f;
+  --brand-glow: 0 0 10px rgba(199,125,255,.45);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.top { position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 10px) 16px 10px; background: var(--header-bg);
+  backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); margin-right: auto; }
+.brand svg { width: 34px; height: 34px; flex: none; }
+.brand span, h1, h2 { font-family: var(--brand-font);
+  font-style: italic; font-weight: 800; letter-spacing: .3px; }
+.brand span { font-size: 22px; text-shadow: var(--brand-glow); }
+.brand span b { color: var(--accent); font-weight: 800; }
+
+#demoBanner { background: var(--banner-bg); color: var(--banner-text); font-size: 13px; padding: 8px 16px; border-bottom: 1px solid var(--banner-line); }
+main { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(var(--tabbar) + env(safe-area-inset-bottom) + 24px); }
+main.full { max-width: none; padding: 0; }
+
+.tabbar { position: fixed; z-index: 1000; left: 0; right: 0; bottom: 0; display: flex;
+  height: calc(var(--tabbar) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
+  background: var(--tab-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 600; }
+.tabbar a.on { color: var(--accent); }
+.tabbar a.submit span.plus { display: flex; align-items: center; justify-content: center; width: 44px; height: 30px;
+  border-radius: 10px; background: var(--accent); color: var(--accent-ink); }
+.tabbar a.submit.on span.plus { box-shadow: 0 0 0 2px var(--text); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px;
+  border-radius: 12px; border: 1px solid var(--line); background: var(--surface2); color: var(--text);
+  font-weight: 650; text-decoration: none; cursor: pointer; min-height: 44px; transition: border-color .15s, background-color .15s; }
+.btn:hover { border-color: var(--hover-line); }
+.btn:active, .chip:active, .card:active { opacity: .85; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.good { background: var(--good-bg); border-color: var(--good-line); color: var(--good-text); }
+.btn.danger { background: var(--bad-bg); border-color: var(--bad-line); color: var(--bad-text); }
+.btn.small { padding: 7px 12px; font-size: 14px; border-radius: 10px; min-height: 40px; }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+h1 { font-size: 30px; line-height: 1.1; margin: 4px 0 8px; }
+h2 { font-size: 22px; margin: 22px 0 10px; }
+.muted { color: var(--muted); }
+.err { color: var(--err); }
+
+/* list */
+.hero { padding: 6px 0 4px; }
+.hero p { margin: 0; color: var(--muted); }
+.search { width: 100%; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); margin: 12px 0 10px; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 600; cursor: pointer; min-height: 40px; }
+.chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.chip svg.i { width: 16px; height: 16px; }
+.day { margin: 22px 0 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.day.today { color: var(--accent); }
+.card { display: grid; grid-template-columns: 92px 1fr; gap: 14px; padding: 10px; margin-bottom: 10px;
+  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.card:hover { border-color: var(--hover-line); }
+.thumb { width: 92px; height: 116px; border-radius: 10px; overflow: hidden; background: var(--surface2); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+.ph svg { width: 70%; fill: rgba(0,0,0,.45); }
+.ph.k-cruise { background: linear-gradient(150deg, #b9d3ff, #2b5fb8); }
+.ph.k-show { background: linear-gradient(150deg, #ffb3d6, #b0306f); }
+.ph.k-meetup { background: linear-gradient(150deg, #ddd0ff, #6247b0); }
+.card h3 { margin: 2px 0 4px; font-size: 18px; line-height: 1.2; }
+.meta { color: var(--muted); font-size: 14px; }
+.meta + .meta { margin-top: 2px; }
+.kind { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.kind.k-cruise { color: var(--cruise); } .kind.k-show { color: var(--show); } .kind.k-meetup { color: var(--meetup); }
+.empty { text-align: center; padding: 40px 10px; color: var(--muted); }
+.foot { text-align: center; margin-top: 30px; font-size: 14px; color: var(--muted); }
+.foot a { color: var(--muted); }
+.offline { background: var(--surface2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; color: var(--muted); margin-top: 10px; }
+
+/* detail */
+.poster { display: block; width: calc(100% + 32px); margin: -16px -16px 14px; background: #000; border: 0; padding: 0; cursor: zoom-in; }
+.poster img { display: block; width: 100%; max-height: 70vh; object-fit: contain; }
+.poster .ph { height: 180px; }
+.poster .ph svg { width: 140px; }
+.facts { display: grid; gap: 12px; margin: 14px 0; }
+.fact { display: flex; gap: 12px; align-items: flex-start; }
+.fact svg.i { color: var(--accent); margin-top: 2px; }
+.fact b { display: block; }
+.fact a { color: var(--text); }
+.navalt { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.navalt a { color: var(--muted); }
+.actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0; }
+.actions .btn, .actions summary { flex-direction: column; gap: 4px; padding: 10px 4px; font-size: 13px; width: 100%; }
+.actions details { position: relative; }
+.actions summary { list-style: none; }
+.actions summary::-webkit-details-marker { display: none; }
+.menu { position: absolute; z-index: 5; top: calc(100% + 6px); left: 0; min-width: 210px; background: var(--surface2);
+  border: 1px solid var(--line); border-radius: 12px; padding: 6px; box-shadow: 0 10px 30px var(--shadow); }
+.menu a, .menu button { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: 0;
+  background: none; color: var(--text); text-decoration: none; cursor: pointer; }
+.menu a:hover, .menu button:hover { background: var(--surface); }
+.desc { white-space: pre-wrap; overflow-wrap: anywhere; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; margin: 14px 0; }
+.box h2 { margin-top: 0; font-size: 18px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px; }
+.dates { display: flex; flex-wrap: wrap; gap: 6px; }
+.dates a { padding: 6px 10px; border-radius: 9px; background: var(--surface2); border: 1px solid var(--line);
+  color: var(--text); text-decoration: none; font-size: 14px; }
+.dates a.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.lightbox { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,.94); display: flex; align-items: center;
+  justify-content: center; cursor: zoom-out; }
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* map */
+.mapfull { height: calc(100dvh - 63px - var(--tabbar) - env(safe-area-inset-bottom) - env(safe-area-inset-top)); width: 100%; }
+.locate { position: absolute; z-index: 900; right: 12px; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 16px); }
+.pin span { position: absolute; left: 3px; top: 0; width: 24px; height: 24px; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.pin-cruise span { background: var(--cruise); } .pin-show span { background: var(--show); } .pin-meetup span { background: var(--meetup); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface2); color: var(--text); }
+.leaflet-popup-content { margin: 12px 14px; font-size: 14px; }
+.leaflet-popup-content b { font-size: 16px; }
+.leaflet-container a.leaflet-popup-close-button { color: var(--muted); }
+.me { width: 16px; height: 16px; border-radius: 50%; background: #4c8dff; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(76,141,255,.25); }
+
+/* forms */
+form fieldset { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 4px; margin: 0 0 14px; background: var(--surface); }
+form legend { padding: 0 6px; font-weight: 800; color: var(--accent); }
+form label { display: block; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--muted); }
+form input:not([type=checkbox]):not([type=file]), form select, form textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--bg); color: var(--text); font-weight: 400; }
+form input:focus, form select:focus, form textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+form small { display: block; font-weight: 400; margin-top: 4px; }
+.row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pickmap { height: 240px; border-radius: 10px; margin: 8px 0 4px; }
+.posterprev { max-width: 160px; max-height: 200px; border-radius: 8px; display: block; margin: 8px 0; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.check { display: flex; gap: 8px; align-items: center; color: var(--text); font-weight: 500; }
+.skips { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 12px; margin-bottom: 12px; }
+.formerr { margin: 0 0 12px; }
+.formerr li { margin-bottom: 2px; }
+
+/* admin */
+.tabs { display: flex; gap: 8px; margin: 10px 0 16px; }
+.adm { padding: 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); margin-bottom: 12px; }
+.adm .top2 { display: grid; grid-template-columns: 72px 1fr; gap: 12px; }
+.adm .thumb { width: 72px; height: 90px; }
+.adm h3 { margin: 0 0 4px; font-size: 17px; }
+.adm .btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.badge { display: inline-block; min-width: 20px; padding: 0 6px; border-radius: 999px; background: var(--bad); color: #fff;
+  font-size: 12px; font-weight: 800; text-align: center; margin-left: 4px; }
+
+#toast { position: fixed; z-index: 4000; left: 50%; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 14px);
+  transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 12px;
+  font-weight: 600; font-size: 14px; box-shadow: 0 8px 24px var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s;
+  max-width: calc(100% - 32px); }
+#toast.show { opacity: 1; pointer-events: auto; }
+#toast button { margin-left: 10px; border: 0; background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 4px 10px; font-weight: 700; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+@media (max-width: 520px) {
+  .row { grid-template-columns: 1fr 1fr; }
+  .row label:first-child { grid-column: 1 / -1; }
+  h1 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a href="#/" class="brand"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="archG" x1="0" x2="1"><stop offset="0" style="stop-color:var(--arch-lo)"/><stop offset=".45" style="stop-color:var(--arch-hi)"/><stop offset="1" style="stop-color:var(--arch-lo)"/></linearGradient><clipPath id="archSky"><rect width="100" height="72"/></clipPath><clipPath id="archTile"><rect width="100" height="100" rx="22"/></clipPath></defs><g clip-path="url(#archTile)"><rect width="100" height="100" style="fill:var(--logo-tile)"/><path d="M50 72 L92 100 L8 100 Z" style="fill:var(--road)"/><path d="M50 74 L50 100" style="stroke:var(--road-line)" stroke-width="2.6" stroke-dasharray="4.5 3.5"/><rect y="71" width="100" height="2" style="fill:var(--road-edge)"/><path d="M20.42 83.90 L21.16 77.91 L21.90 72.44 L22.85 67.47 L23.83 62.95 L24.79 58.82 L25.73 55.05 L26.65 51.62 L27.56 48.48 L28.46 45.62 L29.34 43.01 L30.21 40.63 L31.08 38.46 L31.93 36.48 L32.78 34.68 L33.62 33.04 L34.46 31.54 L35.29 30.18 L36.11 28.94 L36.94 27.82 L37.76 26.81 L38.58 25.89 L39.40 25.06 L40.22 24.32 L41.04 23.65 L41.86 23.06 L42.68 22.54 L43.49 22.08 L44.31 21.68 L45.12 21.35 L45.94 21.07 L46.75 20.84 L47.56 20.67 L48.38 20.55 L49.19 20.47 L50.00 20.45 L50.81 20.47 L51.62 20.55 L52.44 20.67 L53.25 20.84 L54.06 21.07 L54.88 21.35 L55.69 21.68 L56.51 22.08 L57.32 22.54 L58.14 23.06 L58.96 23.65 L59.78 24.32 L60.60 25.06 L61.42 25.89 L62.24 26.81 L63.06 27.82 L63.89 28.94 L64.71 30.18 L65.54 31.54 L66.38 33.04 L67.22 34.68 L68.07 36.48 L68.92 38.46 L69.79 40.63 L70.66 43.01 L71.54 45.62 L72.44 48.48 L73.35 51.62 L74.27 55.05 L75.21 58.82 L76.17 62.95 L77.15 67.47 L78.10 72.44 L78.84 77.91 L79.58 83.90 L71.81 84.81 L71.08 78.91 L70.36 73.54 L69.84 68.61 L69.35 64.11 L68.84 60.01 L68.31 56.28 L67.77 52.87 L67.21 49.77 L66.64 46.95 L66.05 44.38 L65.45 42.05 L64.85 39.92 L64.24 37.99 L63.61 36.24 L62.99 34.66 L62.36 33.22 L61.72 31.92 L61.08 30.74 L60.43 29.68 L59.79 28.73 L59.14 27.87 L58.49 27.10 L57.84 26.42 L57.19 25.81 L56.54 25.27 L55.89 24.79 L55.24 24.38 L54.59 24.02 L53.93 23.72 L53.28 23.47 L52.62 23.27 L51.97 23.11 L51.31 23.00 L50.66 22.93 L50.00 22.91 L49.34 22.93 L48.69 23.00 L48.03 23.11 L47.38 23.27 L46.72 23.47 L46.07 23.72 L45.41 24.02 L44.76 24.38 L44.11 24.79 L43.46 25.27 L42.81 25.81 L42.16 26.42 L41.51 27.10 L40.86 27.87 L40.21 28.73 L39.57 29.68 L38.92 30.74 L38.28 31.92 L37.64 33.22 L37.01 34.66 L36.39 36.24 L35.76 37.99 L35.15 39.92 L34.55 42.05 L33.95 44.38 L33.36 46.95 L32.79 49.77 L32.23 52.87 L31.69 56.28 L31.16 60.01 L30.65 64.11 L30.16 68.61 L29.64 73.54 L28.92 78.91 L28.19 84.81 Z" fill="url(#archG)" clip-path="url(#archSky)"/></g></svg><span id="brandName"></span></a>
+  <button id="installBtn" class="btn small" hidden>Install</button>
+</header>
+<div id="demoBanner" hidden>Demo mode: sample events. Submissions and approvals are saved only in this browser
+  until Supabase keys are added to <code>config.js</code>.</div>
+<main id="view"></main>
+<nav class="tabbar">
+  <a href="#/" data-tab="list"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Events</a>
+  <a href="#/submit" data-tab="submit" class="submit"><span class="plus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Submit</a>
+  <a href="#/map" data-tab="map"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</a>
+</nav>
+<div id="toast" role="status"></div>
+
+<script>
+'use strict';
+const CFG = window.CRUISE_CONFIG;
+const DEMO = new URLSearchParams(location.search).has('demo') ||   // themes.html previews
+             !CFG.SUPABASE_URL || CFG.SUPABASE_URL.includes('YOUR-PROJECT') ||
+             !CFG.SUPABASE_ANON_KEY || CFG.SUPABASE_ANON_KEY.startsWith('YOUR-');
+const LIBS = {
+  supabase: ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js',
+             'sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o'],
+  leaflet:  ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+             'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH']
+};
+const KINDS = { cruise: 'Cruise', show: 'Car show', meetup: 'Meetup' };
+const DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const ORD = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th', '-1': 'last' };
+const DAY_MS = 864e5;
+const DEFAULT_DUR = 3 * 3600e3;   // assumed length when no end time is given
+const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+// ------------------------------------------------------------------ icons
+const IC = {
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  repeat: '<path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  pin: '<path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+  nav: '<path d="M3 11l18-8-8 18-2-8-8-2z"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  flag: '<path d="M5 22V3"/><path d="M5 4h13l-3 4.5 3 4.5H5"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.2 11l7.6-4M8.2 13l7.6 4"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>',
+  web: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  facebook: '<path d="M15 3h-3a4 4 0 0 0-4 4v3H5v4h3v7h4v-7h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
+  instagram: '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>',
+  tiktok: '<path d="M14 3v12a4 4 0 1 1-4-4"/><path d="M14 3c.6 2.8 2.6 4.6 5 4.8"/>',
+  ticket: '<path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  locate: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/>'
+};
+const icon = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]}</svg>`;
+const CAR = '<svg viewBox="0 0 64 32" aria-hidden="true"><path d="M4 23v-4c0-2 1.5-3 3.5-3.4L13 14l6-5.5C20.5 7.2 22 7 24 7h14c2.4 0 4 .6 5.6 2l6.4 5 7 1.2c2.5.4 3 2 3 4V23c0 1-.6 1.5-1.5 1.5H55a6 6 0 0 0-11.6 0H20.6A6 6 0 0 0 9 24.5H5.5C4.6 24.5 4 24 4 23z"/><circle cx="14.8" cy="25" r="4.4"/><circle cx="49.2" cy="25" r="4.4"/></svg>';
+
+// ------------------------------------------------------------------ utils
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = n => String(n).padStart(2, '0');
+const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const uuid = () => crypto.randomUUID();
+
+function safeUrl(u) {
+  try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; }
+}
+function webUrl(v) {
+  v = (v || '').trim(); if (!v) return null;
+  if (!/^https?:\/\//i.test(v)) v = 'https://' + v;
+  return safeUrl(v);
+}
+function socialUrl(kind, v) {
+  v = (v || '').trim(); if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return safeUrl(v);
+  if (/^(www\.|m\.)?(facebook|fb|instagram|tiktok)\.com\//i.test(v)) return safeUrl('https://' + v);
+  const h = v.replace(/^@/, '').replace(/[^\w.\-]/g, '');
+  if (!h) return null;
+  return { facebook: `https://www.facebook.com/${h}`, instagram: `https://www.instagram.com/${h}/`,
+           tiktok: `https://www.tiktok.com/@${h}` }[kind];
+}
+const telHref = p => 'tel:' + String(p).replace(/[^\d+]/g, '');
+
+const store = {
+  get(k, def = null) { try { const v = localStorage.getItem('cn.' + k); return v == null ? def : JSON.parse(v); } catch { return def; } },
+  set(k, v) { localStorage.setItem('cn.' + k, JSON.stringify(v)); },
+  del(k) { localStorage.removeItem('cn.' + k); }
+};
+function deviceId() {
+  let id = store.get('device');
+  if (!id) { id = uuid(); store.set('device', id); }
+  return id;
+}
+
+let toastTimer;
+function toast(msg, action) {
+  const t = $('#toast');
+  t.innerHTML = esc(msg) + (action ? ` <button>${esc(action.label)}</button>` : '');
+  if (action) t.querySelector('button').onclick = action.run;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), action ? 12000 : 3000);
+}
+
+const loaded = {};
+function loadScript([src, integrity]) {
+  return loaded[src] ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.integrity = integrity; s.crossOrigin = 'anonymous';
+    s.onload = res;
+    s.onerror = () => { delete loaded[src]; rej(new Error('Could not load ' + src.split('/')[2] + ' (offline?)')); };
+    document.head.appendChild(s);
+  });
+}
+const loadLeaflet = () => loadScript(LIBS.leaflet);
+
+// ------------------------------------------------------------------ dates & recurrence
+const fmtTime = d => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+const fmtShort = d => d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const fmtLong = d => d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+function dayLabel(d) {
+  const diff = Math.round((startOfDay(d) - startOfDay(new Date())) / DAY_MS);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  return d.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+}
+const timeRange = o => fmtTime(o.start) + (o.end ? ' – ' + fmtTime(o.end) : '');
+
+function parseByday(s) {
+  const m = /^(-1|[1-4])?([A-Z]{2})$/.exec(s || '');
+  return m ? { n: m[1] ? +m[1] : null, dow: DAYS.indexOf(m[2]) } : null;
+}
+function nthWeekday(y, m, dow, n) {
+  if (n === -1) {
+    const last = new Date(y, m + 1, 0);
+    return new Date(y, m, last.getDate() - ((last.getDay() - dow + 7) % 7));
+  }
+  const first = new Date(y, m, 1);
+  const d = new Date(y, m, 1 + ((dow - first.getDay() + 7) % 7) + (n - 1) * 7);
+  return d.getMonth() === m ? d : null;
+}
+
+/* Every occurrence of an event that is still running at `from` and starts by `to`.
+   Wall-clock times are kept in the device's time zone, so a 6 pm cruise night stays
+   at 6 pm across daylight-saving changes. */
+function occurrences(ev, from, to, { withSkipped = false } = {}) {
+  const s0 = new Date(ev.start_at);
+  const dur = ev.end_at ? new Date(ev.end_at) - s0 : null;
+  const firstDay = startOfDay(s0);
+  const mk = day => {
+    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), s0.getHours(), s0.getMinutes());
+    return { start, end: dur != null ? new Date(start.getTime() + dur) : null, key: dateKey(start) };
+  };
+  const ends = o => o.end || new Date(o.start.getTime() + DEFAULT_DUR);
+  const out = [];
+  if (!ev.recur_freq) {
+    const o = mk(s0);
+    if (ends(o) >= from && o.start <= to) out.push(o);
+    return out;
+  }
+  const until = ev.recur_until ? new Date(parseKey(ev.recur_until).getTime() + DAY_MS - 1) : null;
+  const skip = new Set(ev.skip_dates || []);
+  const consider = day => {
+    if (!day || day < firstDay) return true;
+    const o = mk(day);
+    if ((until && o.start > until) || o.start > to) return false;
+    if (ends(o) >= from) {
+      o.skipped = skip.has(o.key);
+      if (withSkipped || !o.skipped) out.push(o);
+    }
+    return true;
+  };
+  const interval = ev.recur_interval || 1;
+  if (ev.recur_freq === 'weekly') {
+    const step = 7 * interval;
+    const k0 = Math.max(0, Math.floor((from - firstDay) / DAY_MS / step) - 1);
+    for (let k = k0; k < k0 + 2000; k++) {
+      if (!consider(new Date(firstDay.getFullYear(), firstDay.getMonth(), firstDay.getDate() + k * step))) break;
+    }
+  } else {
+    const bd = parseByday(ev.recur_byday);
+    if (!bd) return out;
+    const fy = firstDay.getFullYear(), fm = firstDay.getMonth();
+    for (let k = 0; k < 1200; k++) {
+      const mi = fm + k * interval;
+      if (!consider(nthWeekday(fy + Math.floor(mi / 12), mi % 12, bd.dow, bd.n))) break;
+    }
+  }
+  return out;
+}
+function recurText(ev) {
+  if (!ev.recur_freq) return '';
+  const bd = parseByday(ev.recur_byday);
+  const dn = DAY_NAMES[bd ? bd.dow : new Date(ev.start_at).getDay()];
+  let t;
+  if (ev.recur_freq === 'weekly') t = ev.recur_interval === 2 ? `Every other ${dn}` : ev.recur_interval > 2 ? `Every ${ev.recur_interval} weeks on ${dn}` : `Every ${dn}`;
+  else t = `${bd.n === -1 ? 'Last' : ORD[bd.n]} ${dn} of every month`;
+  if (ev.recur_until) t += ` until ${fmtShort(parseKey(ev.recur_until))}`;
+  return t;
+}
+const nextOcc = (ev, now = new Date()) => occurrences(ev, now, new Date(now.getTime() + 400 * DAY_MS))[0] || null;
+
+function weekendRange(now = new Date()) {
+  const d = now.getDay();
+  const back = d === 6 ? 1 : d === 0 ? 2 : -((5 - d + 7) % 7);
+  const fri = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
+  return [fri, new Date(fri.getFullYear(), fri.getMonth(), fri.getDate() + 3)];
+}
+
+// ------------------------------------------------------------------ distance
+function distance(a, b) {
+  const R = 6371, rad = x => x * Math.PI / 180;
+  const dLat = rad(b[0] - a[0]), dLng = rad(b[1] - a[1]);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLng / 2) ** 2;
+  const km = 2 * R * Math.asin(Math.sqrt(h));
+  return CFG.UNITS === 'km' ? km : km * 0.621371;
+}
+const evDist = ev => state.loc && ev.lat != null ? distance(state.loc, [ev.lat, ev.lng]) : null;
+const fmtDist = d => (d < 10 ? d.toFixed(1) : Math.round(d)) + ' ' + CFG.UNITS;
+
+// ------------------------------------------------------------------ calendar export
+function icsText(s) { return String(s || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+function icsFold(line) {
+  const out = []; let cur = '';
+  for (const ch of line) {
+    if (new TextEncoder().encode(cur + ch).length > 74) { out.push(cur); cur = ' ' + ch; } else cur += ch;
+  }
+  out.push(cur); return out.join('\r\n');
+}
+const icsLocal = d => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+function rrule(ev) {
+  if (!ev.recur_freq) return null;
+  let r = `FREQ=${ev.recur_freq === 'weekly' ? 'WEEKLY' : 'MONTHLY'};INTERVAL=${ev.recur_interval || 1};BYDAY=${ev.recur_byday}`;
+  if (ev.recur_until) r += `;UNTIL=${ev.recur_until.replace(/-/g, '')}T235959`;
+  return r;
+}
+function eventLink(ev, key) { return location.origin + location.pathname + `#/e/${ev.id}` + (key ? '/' + key : ''); }
+function icsFor(ev, occ) {
+  const end = occ.end || new Date(occ.start.getTime() + DEFAULT_DUR);
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', `PRODID:-//${CFG.APP_NAME}//EN`, 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', 'BEGIN:VEVENT',
+    `UID:${ev.id}${ev.recur_freq ? '' : '-' + occ.key}@cruisenight`, `DTSTAMP:${stamp}`,
+    `DTSTART:${icsLocal(occ.start)}`, `DTEND:${icsLocal(end)}`];
+  const rr = rrule(ev);
+  if (rr) {
+    lines.push('RRULE:' + rr);
+    const hhmm = `T${pad(occ.start.getHours())}${pad(occ.start.getMinutes())}00`;
+    for (const k of ev.skip_dates || []) if (k >= occ.key) lines.push(`EXDATE:${k.replace(/-/g, '')}${hhmm}`);
+  }
+  lines.push(`SUMMARY:${icsText(ev.title)}`,
+    `LOCATION:${icsText([ev.venue_name, ev.address].filter(Boolean).join(', '))}`,
+    `DESCRIPTION:${icsText((ev.description ? ev.description + '\n\n' : '') + eventLink(ev, occ.key))}`,
+    `URL:${eventLink(ev, occ.key)}`);
+  if (ev.lat != null) lines.push(`GEO:${ev.lat};${ev.lng}`);
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.map(icsFold).join('\r\n') + '\r\n';
+}
+function downloadIcs(ev, occ) {
+  const blob = new Blob([icsFor(ev, occ)], { type: 'text/calendar;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (ev.title.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'event') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function googleCalUrl(ev, occ) {
+  const end = occ.end || new Date(occ.start.getTime() + DEFAULT_DUR);
+  const p = new URLSearchParams({
+    action: 'TEMPLATE', text: ev.title, dates: `${icsLocal(occ.start)}/${icsLocal(end)}`,
+    details: (ev.description ? ev.description + '\n\n' : '') + eventLink(ev, occ.key),
+    location: [ev.venue_name, ev.address].filter(Boolean).join(', '),
+    ctz: Intl.DateTimeFormat().resolvedOptions().timeZone
+  });
+  const rr = rrule(ev);
+  if (rr) p.set('recur', 'RRULE:' + rr);
+  return 'https://calendar.google.com/calendar/render?' + p;
+}
+
+// ------------------------------------------------------------------ navigation links
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function navLinks(ev) {
+  const dest = encodeURIComponent(ev.lat != null ? `${ev.lat},${ev.lng}` : ev.address);
+  const l = {
+    google: `https://www.google.com/maps/dir/?api=1&destination=${dest}`,
+    apple: `https://maps.apple.com/?daddr=${dest}`,
+    waze: ev.lat != null ? `https://waze.com/ul?ll=${ev.lat},${ev.lng}&navigate=yes` : `https://waze.com/ul?q=${dest}&navigate=yes`
+  };
+  l.primary = IS_IOS ? l.apple : l.google;
+  return l;
+}
+
+// ------------------------------------------------------------------ posters
+const thumbPath = p => p.replace(/\.jpg$/, '-t.jpg');
+function posterHTML(ev, { thumb = false } = {}) {
+  const full = ev.poster_path ? api.posterUrl(ev.poster_path) : null;
+  if (!full) return `<div class="ph k-${esc(ev.kind)}">${CAR}</div>`;
+  const src = thumb ? (api.posterUrl(thumbPath(ev.poster_path)) || full) : full;
+  return `<img src="${esc(src)}" data-full="${esc(full)}" alt="" loading="lazy" onerror="if(this.src!==this.dataset.full){this.src=this.dataset.full}">`;
+}
+function loadImage(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('That file is not an image this browser can read.')); };
+    img.src = url;
+  });
+}
+function scaleTo(img, max, quality) {
+  const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, 'image/jpeg', quality));
+}
+async function uploadPosterFile(file, base) {
+  const img = await loadImage(file);
+  const [full, small] = await Promise.all([scaleTo(img, 1600, 0.85), scaleTo(img, 400, 0.8)]);
+  if (full.size > 5 * 1024 * 1024) throw new Error('That poster is too large even after shrinking it.');
+  const path = base + '.jpg';
+  await api.uploadPoster(path, full);
+  await api.uploadPoster(thumbPath(path), small).catch(() => {});
+  return path;
+}
+async function removePoster(path) {
+  if (!path) return;
+  await api.deletePosters([path, thumbPath(path)]).catch(() => {});
+}
+async function movePoster(path, folder) {
+  const to = folder + '/' + path.split('/').pop();
+  if (to === path) return path;
+  await api.movePoster(path, to);
+  await api.movePoster(thumbPath(path), thumbPath(to)).catch(() => {});
+  return to;
+}
+
+// ------------------------------------------------------------------ backends
+let sb;
+const supaApi = {
+  async init() {
+    await loadScript(LIBS.supabase);
+    sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+  },
+  async listPublic() { const { data, error } = await sb.from('public_events').select('*'); if (error) throw error; return data; },
+  async goingCounts() { const { data, error } = await sb.rpc('going_counts'); if (error) throw error; return data; },
+  async setGoing(id, date, going) {
+    const { data, error } = await sb.rpc('set_going', { p_event: id, p_date: date, p_device: deviceId(), p_going: going });
+    if (error) throw error; return data;
+  },
+  posterUrl(path) { return sb.storage.from('posters').getPublicUrl(path).data.publicUrl; },
+  async uploadPoster(path, blob) {
+    const { error } = await sb.storage.from('posters').upload(path, blob, { contentType: 'image/jpeg', upsert: false });
+    if (error) throw error;
+  },
+  async submit(ev) { const { error } = await sb.from('events').insert(ev); if (error) throw error; },
+  async session() { const { data } = await sb.auth.getSession(); return data.session; },
+  async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
+  async signOut() { await sb.auth.signOut(); },
+  async isAdmin() { const { data } = await sb.rpc('is_admin'); return !!data; },
+  async listByStatus(status) {
+    const { data, error } = await sb.from('events').select('*').eq('status', status)
+      .order(status === 'pending' ? 'created_at' : 'start_at', { ascending: status !== 'rejected' });
+    if (error) throw error; return data;
+  },
+  async counts() {
+    const out = {};
+    await Promise.all(['pending', 'approved', 'rejected'].map(async s => {
+      const { count } = await sb.from('events').select('id', { count: 'exact', head: true }).eq('status', s);
+      out[s] = count || 0;
+    }));
+    return out;
+  },
+  async get(id) { const { data, error } = await sb.from('events').select('*').eq('id', id).maybeSingle(); if (error) throw error; return data; },
+  async update(id, patch) {
+    const { data, error } = await sb.from('events').update(patch).eq('id', id).select('id');
+    if (error) throw error;
+    if (!data.length) throw new Error('Not saved. Is your user in the admins table?');
+  },
+  async remove(id) { const { error } = await sb.from('events').delete().eq('id', id); if (error) throw error; },
+  async movePoster(from, to) { const { error } = await sb.storage.from('posters').move(from, to); if (error) throw error; },
+  async deletePosters(paths) { const { error } = await sb.storage.from('posters').remove(paths); if (error) throw error; }
+};
+
+const demoApi = {
+  async init() { if (!store.get('demo.events')) { store.set('demo.events', demoSeed()); store.set('demo.rsvps', demoRsvps()); } },
+  all() { return store.get('demo.events', []); },
+  save(list) { store.set('demo.events', list); },
+  async listPublic() {
+    return this.all().filter(e => e.status === 'approved').map(({ submitter_email, status, created_at, approved_at, ...pub }) => pub);
+  },
+  async goingCounts() {
+    return Object.entries(store.get('demo.rsvps', {})).map(([k, devs]) => {
+      const [event_id, occurrence_date] = k.split('|'); return { event_id, occurrence_date, n: devs.length };
+    });
+  },
+  async setGoing(id, date, going) {
+    const r = store.get('demo.rsvps', {}), k = `${id}|${date}`, set = new Set(r[k] || []);
+    going ? set.add(deviceId()) : set.delete(deviceId());
+    r[k] = [...set]; store.set('demo.rsvps', r); return set.size;
+  },
+  posterUrl(path) { return store.get('demo.posters', {})[path] || (path.startsWith('demo/') ? demoPoster(path) : null); },
+  async uploadPoster(path, blob) {
+    const url = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob); });
+    const p = store.get('demo.posters', {}); p[path] = url;
+    try { store.set('demo.posters', p); } catch { throw new Error('Demo storage in this browser is full. Delete some test events.'); }
+  },
+  async submit(ev) { const l = this.all(); l.push({ ...ev, status: 'pending', skip_dates: [], created_at: new Date().toISOString(), approved_at: null }); this.save(l); },
+  async session() { return sessionStorage.getItem('cn.demo.session') ? { demo: true } : null; },
+  async signIn() { sessionStorage.setItem('cn.demo.session', '1'); },
+  async signOut() { sessionStorage.removeItem('cn.demo.session'); },
+  async isAdmin() { return true; },
+  async listByStatus(status) {
+    const l = this.all().filter(e => e.status === status);
+    return status === 'pending' ? l.sort((a, b) => a.created_at.localeCompare(b.created_at)) : l.sort((a, b) => a.start_at.localeCompare(b.start_at));
+  },
+  async counts() { const c = { pending: 0, approved: 0, rejected: 0 }; for (const e of this.all()) c[e.status]++; return c; },
+  async get(id) { return this.all().find(e => e.id === id) || null; },
+  async update(id, patch) { this.save(this.all().map(e => e.id === id ? { ...e, ...patch } : e)); },
+  async remove(id) { this.save(this.all().filter(e => e.id !== id)); },
+  async movePoster(from, to) { const p = store.get('demo.posters', {}); if (p[from]) { p[to] = p[from]; delete p[from]; store.set('demo.posters', p); } },
+  async deletePosters(paths) { const p = store.get('demo.posters', {}); for (const k of paths) delete p[k]; store.set('demo.posters', p); }
+};
+const api = DEMO ? demoApi : supaApi;
+
+function demoPoster(path) {
+  const [, n] = /demo\/(\d)/.exec(path) || [, '1'];
+  const v = { 1: ['THURSDAY', 'NIGHT', 'CRUISE-IN', '#cfd8e3', '#0b1a33'], 2: ['CARS', '&amp;', 'COFFEE', '#7dd3fc', '#062238'],
+              3: ['FALL', 'CLASSIC', 'CAR SHOW', '#ff6fb5', '#2a0518'] }[n];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520"><defs><linearGradient id="g" x2="0" y2="1"><stop offset="0" stop-color="${v[4]}"/><stop offset="1" stop-color="#000"/></linearGradient></defs>
+    <rect width="400" height="520" fill="url(#g)"/><circle cx="200" cy="330" r="150" fill="${v[3]}" opacity=".18"/>
+    <g font-family="Arial Narrow,Arial,sans-serif" font-weight="900" font-style="italic" text-anchor="middle" fill="${v[3]}">
+    <text x="200" y="110" font-size="58">${v[0]}</text><text x="200" y="175" font-size="58" fill="#fff">${v[1]}</text><text x="200" y="240" font-size="58">${v[2]}</text></g>
+    <g transform="translate(72 330) scale(4)" fill="#fff" opacity=".9">${CAR.replace(/<\/?svg[^>]*>/g, '')}</g>
+    <text x="200" y="490" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#fff" opacity=".8">ALL MAKES · ALL MODELS · ALL WELCOME</text></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+function demoSeed() {
+  const [lat, lng] = CFG.DEFAULT_CENTER, t = new Date();
+  const at = (days, h, m = 0) => new Date(t.getFullYear(), t.getMonth(), t.getDate() + days, h, m);
+  const toDow = dow => (dow - t.getDay() + 7) % 7;
+  const iso = d => d.toISOString();
+  const base = { description: '', entry_fee: '', contact_name: '', contact_email: '', contact_phone: '', website: '', facebook: '',
+    instagram: '', tiktok: '', submitter_email: 'organiser@example.com', skip_dates: [], recur_freq: null, recur_interval: 1,
+    recur_byday: null, recur_until: null, poster_path: null, created_at: iso(at(-3, 12)), approved_at: iso(at(-2, 9)), status: 'approved' };
+  const thu = at(toDow(4) - 21, 18), cc = nthWeekday(t.getFullYear(), t.getMonth(), 6, 2);
+  return [
+    { ...base, id: uuid(), kind: 'cruise', title: 'Thursday Night Cruise-In', start_at: iso(thu), end_at: iso(new Date(thu.getFullYear(), thu.getMonth(), thu.getDate(), 21)),
+      recur_freq: 'weekly', recur_byday: 'TH', skip_dates: [dateKey(at(toDow(4) + 14, 0))], poster_path: 'demo/1.svg',
+      venue_name: 'Main Street Drive-In', address: '120 Main St', lat: lat + 0.021, lng: lng - 0.034,
+      description: 'Weekly cruise-in, every Thursday through the season. Bring anything with wheels.\nMusic, food trucks, 50/50 raffle.',
+      entry_fee: 'Free', contact_name: 'Dale', contact_email: 'dale@example.com', contact_phone: '(555) 010-2030',
+      facebook: 'mainstreetcruisers', instagram: '@mainstreetcruise' },
+    { ...base, id: uuid(), kind: 'meetup', title: 'Cars & Coffee', start_at: iso(new Date(cc.getFullYear(), cc.getMonth(), cc.getDate(), 8)),
+      end_at: iso(new Date(cc.getFullYear(), cc.getMonth(), cc.getDate(), 11)), recur_freq: 'monthly', recur_byday: '2SA', poster_path: 'demo/2.svg',
+      venue_name: 'Roastworks Coffee', address: '45 Commerce Dr', lat: lat - 0.012, lng: lng + 0.051,
+      description: 'Second Saturday of every month. Grab a coffee, walk the lot, no burnouts.', entry_fee: 'Free',
+      website: 'example.com/carsandcoffee', instagram: 'roastworkscc' },
+    { ...base, id: uuid(), kind: 'show', title: 'Fall Classic Car Show', start_at: iso(at(10, 10)), end_at: iso(at(10, 16)), poster_path: 'demo/3.svg',
+      venue_name: 'County Fairgrounds', address: '900 Fairground Rd', lat: lat + 0.09, lng: lng + 0.11,
+      description: 'Judged show, 30 classes, dash plaques for the first 150 cars.\nRegistration 8–10 am.',
+      entry_fee: '$20 show car · spectators free', contact_name: 'Fall Classic Committee', contact_email: 'info@example.com',
+      website: 'https://example.com/fallclassic', facebook: 'https://facebook.com/fallclassic', tiktok: '@fallclassic' },
+    { ...base, id: uuid(), kind: 'meetup', title: 'JDM Night Meet', start_at: iso(at(toDow(5) + 7, 20)), end_at: iso(at(toDow(5) + 7, 23)),
+      venue_name: 'Eastgate Plaza (back lot)', address: '3100 Eastgate Blvd', lat: lat - 0.05, lng: lng - 0.08,
+      description: 'Respect the spot. No revving, no burnouts, or we lose the lot.', instagram: 'jdmnightmeet', tiktok: 'jdmnightmeet' },
+    { ...base, id: uuid(), status: 'pending', approved_at: null, created_at: iso(at(-1, 15)), kind: 'show', title: 'Mopar Mayhem',
+      start_at: iso(at(24, 9)), end_at: iso(at(24, 15)), venue_name: 'Riverside Park', address: '1 Riverside Park Rd',
+      lat: lat + 0.04, lng: lng + 0.02, entry_fee: '$15', description: 'All Mopar show. Trophies in 12 classes.',
+      contact_email: 'mopar@example.com', submitter_email: 'mopar@example.com' },
+    { ...base, id: uuid(), status: 'pending', approved_at: null, created_at: iso(at(0, 8)), kind: 'cruise', title: 'Sunday Morning Run',
+      start_at: iso(at(toDow(0) || 7, 9)), end_at: null, recur_freq: 'weekly', recur_byday: 'SU', venue_name: 'Gas & Go', address: '77 Route 9',
+      lat: lat - 0.03, lng: lng + 0.09, description: 'Meet at 9, roll out at 9:30 for a 60-mile loop.', submitter_email: 'runner@example.com' }
+  ];
+}
+function demoRsvps() {
+  const r = {}, evs = store.get('demo.events', []), now = new Date();
+  evs.filter(e => e.status === 'approved').forEach((e, i) => {
+    const o = nextOcc(e, now); if (!o) return;
+    r[`${e.id}|${o.key}`] = Array.from({ length: [14, 9, 37, 6][i] || 3 }, uuid);
+  });
+  return r;
+}
+
+// ------------------------------------------------------------------ state
+const state = { events: [], going: {}, loc: null, loadedAt: 0, offline: false, cleanup: [],
+  f: { kinds: new Set(), weekend: false, q: '', near: false } };
+const goingMine = () => store.get('going', {});
+
+async function ensureData(force = false) {
+  if (!force && Date.now() - state.loadedAt < 60e3) return;
+  try {
+    const [evs, counts] = await Promise.all([api.listPublic(), api.goingCounts().catch(() => [])]);
+    state.events = evs; state.offline = false;
+    state.going = Object.fromEntries(counts.map(c => [`${c.event_id}|${c.occurrence_date}`, c.n]));
+    try { store.set('cache', { evs, going: state.going, at: Date.now() }); } catch {}
+  } catch (err) {
+    const c = store.get('cache');
+    if (!c) throw err;
+    state.events = c.evs; state.going = c.going || {}; state.offline = c.at;
+  }
+  state.loadedAt = Date.now();
+}
+
+function requestLocation(quiet = false) {
+  return new Promise(res => {
+    if (!navigator.geolocation) { if (!quiet) toast('Location is not available on this device.'); return res(false); }
+    navigator.geolocation.getCurrentPosition(
+      p => { state.loc = [p.coords.latitude, p.coords.longitude]; store.set('locOk', true); res(true); },
+      () => { if (!quiet) toast('Location is blocked. Allow it in your browser settings to sort by distance.'); res(false); },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+  });
+}
+
+// ------------------------------------------------------------------ views: list
+function viewList(el) {
+  const f = state.f;
+  el.innerHTML = `
+    <section class="hero"><h1>${esc(CFG.TAGLINE)}</h1><p>Tap an event for directions, contacts and the full poster.</p></section>
+    <input class="search" type="search" id="q" placeholder="Search events, venues, towns…" value="${esc(f.q)}">
+    <div class="chips">
+      <button class="chip" data-near>${icon('locate')}Near me</button>
+      <button class="chip" data-weekend>This weekend</button>
+      ${Object.entries(KINDS).map(([k, v]) => `<button class="chip" data-kind="${k}">${v}s</button>`).join('')}
+    </div>
+    <div id="list"><p class="empty">Loading events…</p></div>
+    <p class="foot">Running an event? <a href="#/submit">Submit it here</a> · <a href="#/admin">Admin</a></p>`;
+  const sync = () => {
+    $('[data-near]', el).classList.toggle('on', f.near);
+    $('[data-weekend]', el).classList.toggle('on', f.weekend);
+    $$('[data-kind]', el).forEach(b => b.classList.toggle('on', f.kinds.has(b.dataset.kind)));
+    renderList();
+  };
+  $('#q', el).oninput = e => { f.q = e.target.value; renderList(); };
+  $('[data-weekend]', el).onclick = () => { f.weekend = !f.weekend; sync(); };
+  $$('[data-kind]', el).forEach(b => b.onclick = () => { const k = b.dataset.kind; f.kinds.has(k) ? f.kinds.delete(k) : f.kinds.add(k); sync(); });
+  $('[data-near]', el).onclick = async () => {
+    if (f.near) { f.near = false; return sync(); }
+    if (await requestLocation()) { f.near = true; sync(); }
+  };
+  ensureData().then(sync).catch(err => { $('#list', el).innerHTML = `<p class="empty err">Couldn't load events: ${esc(err.message)}</p>`; });
+}
+
+function upcomingOccs() {
+  const now = new Date(), f = state.f;
+  const horizon = new Date(now.getTime() + CFG.DAYS_AHEAD * DAY_MS), far = new Date(now.getTime() + 730 * DAY_MS);
+  const [wkS, wkE] = weekendRange(now);
+  const q = f.q.trim().toLowerCase();
+  let rows = [];
+  for (const ev of state.events) {
+    if (f.kinds.size && !f.kinds.has(ev.kind)) continue;
+    if (q && ![ev.title, ev.venue_name, ev.address, ev.description].join(' ').toLowerCase().includes(q)) continue;
+    let occs = occurrences(ev, now, ev.recur_freq ? horizon : far);
+    if (f.weekend) occs = occs.filter(o => o.start < wkE && (o.end || new Date(o.start.getTime() + DEFAULT_DUR)) > wkS);
+    if (f.near) occs = occs.slice(0, 1);
+    for (const o of occs) rows.push({ ev, o, d: evDist(ev) });
+  }
+  if (f.near) rows.sort((a, b) => (a.d ?? 1e9) - (b.d ?? 1e9) || a.o.start - b.o.start);
+  else rows.sort((a, b) => a.o.start - b.o.start);
+  return rows;
+}
+
+function cardHTML({ ev, o, d }) {
+  const n = state.going[`${ev.id}|${o.key}`];
+  const bits = [];
+  if (ev.recur_freq) bits.push(esc(recurText(ev).replace(/ until .*/, '')));
+  if (d != null) bits.push(fmtDist(d));
+  if (n) bits.push(`${n} going`);
+  return `<a class="card" href="#/e/${ev.id}/${o.key}">
+    <div class="thumb">${posterHTML(ev, { thumb: true })}</div>
+    <div>
+      <span class="kind k-${esc(ev.kind)}">${KINDS[ev.kind] || ''}</span>
+      <h3>${esc(ev.title)}</h3>
+      <div class="meta">${state.f.near ? esc(fmtShort(o.start)) + ' · ' : ''}${esc(timeRange(o))}${ev.venue_name ? ' · ' + esc(ev.venue_name) : ''}</div>
+      ${bits.length ? `<div class="meta">${bits.join(' · ')}</div>` : ''}
+    </div></a>`;
+}
+
+function renderList() {
+  const box = $('#list'); if (!box) return;
+  const rows = upcomingOccs();
+  let html = '';
+  if (state.offline) html += `<div class="offline">Offline. Showing events saved ${esc(new Date(state.offline).toLocaleString())}.</div>`;
+  if (!rows.length) {
+    html += `<div class="empty"><p>${state.events.length ? 'No events match.' : 'No events listed yet. Be the first!'}</p><p><a class="btn primary" href="#/submit">Submit an event</a></p></div>`;
+  } else if (state.f.near) {
+    html += `<div class="day">Nearest first</div>` + rows.map(cardHTML).join('');
+  } else {
+    let last = '';
+    for (const r of rows) {
+      if (r.o.key !== last) { last = r.o.key; const lab = dayLabel(r.o.start); html += `<div class="day${lab === 'Today' ? ' today' : ''}">${esc(lab)}</div>`; }
+      html += cardHTML(r);
+    }
+  }
+  box.innerHTML = html;
+}
+
+// ------------------------------------------------------------------ views: detail
+async function viewDetail(el, id, key) {
+  el.innerHTML = '<p class="empty">Loading…</p>';
+  await ensureData();
+  let ev = state.events.find(e => e.id === id);
+  if (!ev) { await ensureData(true); ev = state.events.find(e => e.id === id); }
+  if (!ev) { el.innerHTML = `<div class="empty"><h2>Event not found</h2><p>It may have finished or been removed.</p><a class="btn" href="#/">All events</a></div>`; return; }
+  const now = new Date();
+  const occs = occurrences(ev, now, new Date(now.getTime() + 400 * DAY_MS)).slice(0, 8);
+  const o = occs.find(x => x.key === key) || occs[0];
+  if (!o) { el.innerHTML = `<div class="empty"><h2>${esc(ev.title)}</h2><p>This event has finished.</p><a class="btn" href="#/">All events</a></div>`; return; }
+  const nav = navLinks(ev);
+  const gk = `${ev.id}|${o.key}`;
+  const mine = !!goingMine()[gk];
+  const d = evDist(ev);
+  const socials = [['web', webUrl(ev.website), 'Website'], ['facebook', socialUrl('facebook', ev.facebook), 'Facebook'],
+                   ['instagram', socialUrl('instagram', ev.instagram), 'Instagram'], ['tiktok', socialUrl('tiktok', ev.tiktok), 'TikTok']].filter(s => s[1]);
+  const email = EMAIL_RE.test(ev.contact_email || '') ? ev.contact_email : null;
+  const mailHref = email ? `mailto:${esc(email)}?subject=${encodeURIComponent(ev.title + ' – ' + fmtShort(o.start))}` : null;
+
+  el.innerHTML = `
+    <button class="poster" id="poster" aria-label="View full poster">${posterHTML(ev)}</button>
+    <span class="kind k-${esc(ev.kind)}">${KINDS[ev.kind] || ''}</span>
+    <h1>${esc(ev.title)}</h1>
+    <div class="facts">
+      <div class="fact">${icon('clock')}<div><b>${esc(fmtLong(o.start))}</b>${esc(timeRange(o))}</div></div>
+      ${ev.recur_freq ? `<div class="fact">${icon('repeat')}<div><b>${esc(recurText(ev))}</b>
+        <div class="dates">${occs.map(x => `<a href="#/e/${ev.id}/${x.key}" class="${x.key === o.key ? 'on' : ''}">${esc(fmtShort(x.start))}</a>`).join('')}</div></div></div>` : ''}
+      <div class="fact">${icon('pin')}<div>${ev.venue_name ? `<b>${esc(ev.venue_name)}</b>` : ''}
+        <a href="${esc(nav.primary)}" target="_blank" rel="noopener">${esc(ev.address)}</a>${d != null ? ` <span class="muted">· ${fmtDist(d)}</span>` : ''}
+        <div class="navalt">Open in <a href="${esc(nav.google)}" target="_blank" rel="noopener">Google Maps</a> · <a href="${esc(nav.apple)}" target="_blank" rel="noopener">Apple Maps</a> · <a href="${esc(nav.waze)}" target="_blank" rel="noopener">Waze</a></div></div></div>
+      ${ev.entry_fee ? `<div class="fact">${icon('ticket')}<div>${esc(ev.entry_fee)}</div></div>` : ''}
+    </div>
+    <div class="actions">
+      <a class="btn primary" href="${esc(nav.primary)}" target="_blank" rel="noopener">${icon('nav')}Directions</a>
+      <details><summary class="btn">${icon('cal')}Calendar</summary><div class="menu">
+        <button id="icsBtn">Apple / Outlook (.ics)</button>
+        <a href="${esc(googleCalUrl(ev, o))}" target="_blank" rel="noopener">Google Calendar</a></div></details>
+      <button class="btn ${mine ? 'on' : ''}" id="goingBtn">${icon('flag')}<span>${goingLabel(mine, state.going[gk])}</span></button>
+      <button class="btn" id="shareBtn">${icon('share')}Share</button>
+    </div>
+    ${ev.description ? `<div class="box"><h2>About</h2><div class="desc">${esc(ev.description)}</div></div>` : ''}
+    ${(ev.contact_name || email || ev.contact_phone || socials.length) ? `<div class="box"><h2>Contact</h2>
+      <div class="facts">
+        ${ev.contact_name ? `<div class="fact">${icon('user')}<div>${esc(ev.contact_name)}</div></div>` : ''}
+        ${email ? `<div class="fact">${icon('mail')}<div><a href="${mailHref}">${esc(email)}</a></div></div>` : ''}
+        ${ev.contact_phone ? `<div class="fact">${icon('phone')}<div><a href="${esc(telHref(ev.contact_phone))}">${esc(ev.contact_phone)}</a></div></div>` : ''}
+      </div>
+      ${socials.length ? `<div class="links">${socials.map(([ic, url, lab]) => `<a class="btn small" href="${esc(url)}" target="_blank" rel="noopener">${icon(ic)}${lab}</a>`).join('')}</div>` : ''}
+    </div>` : ''}
+    <p class="foot"><a href="#/">← All events</a></p>`;
+
+  $('#poster', el).onclick = () => {
+    const src = ev.poster_path && api.posterUrl(ev.poster_path); if (!src) return;
+    const lb = document.createElement('div'); lb.className = 'lightbox';
+    lb.innerHTML = `<img src="${esc(src)}" alt="">`; lb.onclick = () => lb.remove();
+    document.body.appendChild(lb);
+  };
+  $('#icsBtn', el).onclick = e => { downloadIcs(ev, o); e.target.closest('details').open = false; };
+  $('#shareBtn', el).onclick = async () => {
+    const url = eventLink(ev, o.key);
+    const text = `${ev.title} – ${fmtShort(o.start)}, ${fmtTime(o.start)}${ev.venue_name ? ' at ' + ev.venue_name : ''}`;
+    if (navigator.share) { try { await navigator.share({ title: ev.title, text, url }); } catch {} return; }
+    try { await navigator.clipboard.writeText(`${text}\n${url}`); toast('Link copied'); } catch { toast('Link: ' + url); }
+  };
+  $('#goingBtn', el).onclick = async e => {
+    const btn = e.currentTarget, m = goingMine(), now = !m[gk];
+    btn.disabled = true;
+    try {
+      const n = await api.setGoing(ev.id, o.key, now);
+      now ? (m[gk] = 1) : delete m[gk];
+      store.set('going', m); state.going[gk] = n;
+      btn.classList.toggle('on', now); btn.querySelector('span').textContent = goingLabel(now, n);
+    } catch (err) { toast("Couldn't save: " + err.message); }
+    btn.disabled = false;
+  };
+}
+const goingLabel = (mine, n) => (mine ? "I'm going" : 'Going?') + (n ? ` · ${n}` : '');
+
+// ------------------------------------------------------------------ views: map
+function pinIcon(kind) {
+  return L.divIcon({ className: 'pin pin-' + kind, html: '<span></span>', iconSize: [30, 34], iconAnchor: [15, 32], popupAnchor: [0, -30] });
+}
+function addTiles(map) {
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+}
+async function viewMap(el) {
+  el.classList.add('full');
+  el.innerHTML = `<div id="map" class="mapfull"></div><button class="btn locate" id="locBtn">${icon('locate')}Near me</button>`;
+  try { await Promise.all([loadLeaflet(), ensureData()]); }
+  catch (err) { el.innerHTML = `<p class="empty err">${esc(err.message)}</p>`; return; }
+  if (!$('#map')) return;   // navigated away while loading
+  const map = L.map('map').setView(state.loc || CFG.DEFAULT_CENTER, state.loc ? 11 : CFG.DEFAULT_ZOOM);
+  state.cleanup.push(() => map.remove());
+  addTiles(map);
+  const pts = [];
+  for (const ev of state.events) {
+    if (ev.lat == null) continue;
+    const o = nextOcc(ev); if (!o) continue;
+    pts.push([ev.lat, ev.lng]);
+    L.marker([ev.lat, ev.lng], { icon: pinIcon(ev.kind), title: ev.title }).addTo(map).bindPopup(
+      `<span class="kind k-${esc(ev.kind)}">${KINDS[ev.kind]}</span><br><b>${esc(ev.title)}</b><br>
+       ${esc(dayLabel(o.start))}, ${esc(fmtTime(o.start))}${ev.recur_freq ? '<br>' + esc(recurText(ev)) : ''}<br>
+       ${esc(ev.venue_name || ev.address)}<br><a href="#/e/${ev.id}/${o.key}">Details →</a>`);
+  }
+  let me;
+  const showMe = () => {
+    if (!state.loc) return;
+    me ? me.setLatLng(state.loc) : (me = L.marker(state.loc, { icon: L.divIcon({ className: '', html: '<div class="me"></div>', iconSize: [16, 16] }), interactive: false }).addTo(map));
+  };
+  if (state.loc) showMe();
+  else if (pts.length) map.fitBounds(pts, { padding: [40, 40], maxZoom: 12 });
+  $('#locBtn').onclick = async () => { if (await requestLocation()) { showMe(); map.setView(state.loc, 11); } };
+}
+
+// ------------------------------------------------------------------ event form (submit + admin edit)
+function eventFormHTML(ev, admin) {
+  const v = k => esc(ev[k] ?? '');
+  const s = ev.start_at ? new Date(ev.start_at) : null, e = ev.end_at ? new Date(ev.end_at) : null;
+  const hhmm = d => d ? `${pad(d.getHours())}:${pad(d.getMinutes())}` : '';
+  const rep = !ev.recur_freq ? '' : ev.recur_freq === 'weekly' ? 'w' + (ev.recur_interval || 1) : (ev.recur_byday || '').startsWith('-1') ? 'mL' : 'mN';
+  return `<form id="evForm" novalidate>
+    <fieldset><legend>The event</legend>
+      <label>Type <select name="kind">${Object.entries(KINDS).map(([k, n]) => `<option value="${k}" ${ev.kind === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+      <label>Event name * <input name="title" maxlength="120" required value="${v('title')}"></label>
+      <label>Description <textarea name="description" rows="4" maxlength="4000" placeholder="What to expect, rules, food, music…">${v('description')}</textarea></label>
+      <label>Entry fee <input name="entry_fee" maxlength="60" placeholder="Free · $10 show car · spectators free" value="${v('entry_fee')}"></label>
+    </fieldset>
+    <fieldset><legend>When</legend>
+      <div class="row">
+        <label>${admin ? 'First date' : 'Date'} * <input type="date" name="date" required value="${s ? dateKey(s) : ''}"></label>
+        <label>Starts * <input type="time" name="start" required value="${hhmm(s)}"></label>
+        <label>Ends <input type="time" name="end" value="${hhmm(e)}"></label>
+      </div>
+      <div class="row2">
+        <label>Repeats <select name="repeat">
+          <option value="">Doesn't repeat</option><option value="w1">Every week</option><option value="w2">Every other week</option>
+          <option value="mN">Monthly (same week)</option><option value="mL">Monthly (last week)</option></select></label>
+        <label data-until>Until (optional) <input type="date" name="until" value="${v('recur_until')}"></label>
+      </div>
+      ${admin && ev.recur_freq ? `<label>Cancelled dates <small>Tick a date to drop it without ending the series.</small></label><div class="skips" id="skips"></div>` : ''}
+    </fieldset>
+    <fieldset><legend>Where</legend>
+      <label>Venue name <input name="venue_name" maxlength="120" placeholder="Joe's Diner parking lot" value="${v('venue_name')}"></label>
+      <label>Address * <input name="address" maxlength="300" required placeholder="Street, town" value="${v('address')}"></label>
+      <button type="button" class="btn small" id="geoBtn">${icon('pin')}Find on map</button> <span id="geoMsg" class="muted"></span>
+      <div id="pickMap" class="pickmap" hidden></div>
+      <input type="hidden" name="lat" value="${v('lat')}"><input type="hidden" name="lng" value="${v('lng')}">
+      <p></p>
+    </fieldset>
+    <fieldset><legend>Poster or flyer</legend>
+      ${ev.poster_path ? `<div id="curPoster" class="posterprev" style="max-width:160px">${posterHTML(ev, { thumb: true })}</div>
+        <label class="check"><input type="checkbox" name="removePoster"> Remove this poster</label>` : ''}
+      <label>${ev.poster_path ? 'Replace with' : 'Image (JPG or PNG)'} <input type="file" name="poster" accept="image/*"></label>
+      <img id="posterPrev" class="posterprev" hidden alt="">
+    </fieldset>
+    <fieldset><legend>Contact (shown on the listing)</legend>
+      <label>Name or club <input name="contact_name" maxlength="80" value="${v('contact_name')}"></label>
+      <div class="row2">
+        <label>Email <input type="email" name="contact_email" maxlength="120" value="${v('contact_email')}"></label>
+        <label>Phone <input type="tel" name="contact_phone" maxlength="40" value="${v('contact_phone')}"></label>
+      </div>
+      <label>Website <input name="website" maxlength="300" placeholder="example.com" value="${v('website')}"></label>
+      <div class="row2">
+        <label>Facebook <input name="facebook" maxlength="300" placeholder="page name or link" value="${v('facebook')}"></label>
+        <label>Instagram <input name="instagram" maxlength="300" placeholder="@handle" value="${v('instagram')}"></label>
+      </div>
+      <label>TikTok <input name="tiktok" maxlength="300" placeholder="@handle" value="${v('tiktok')}"></label>
+    </fieldset>
+    <fieldset><legend>${admin ? 'Submitted by' : 'About you'}</legend>
+      <label>${admin ? 'Submitter email' : 'Your email'} * <input type="email" name="submitter_email" maxlength="120" required value="${v('submitter_email')}">
+        ${admin ? '' : '<small>Not shown publicly. Only used if there is a question about your listing.</small>'}</label>
+    </fieldset>
+    <div class="hp" aria-hidden="true"><label>Leave empty <input name="company" tabindex="-1" autocomplete="off"></label></div>
+    <ul id="formErr" class="err formerr" hidden></ul>
+    <button class="btn primary" type="submit" id="saveBtn" style="width:100%">${admin ? 'Save changes' : 'Submit for approval'}</button>
+  </form>`.replace('<option value="' + rep + '"', '<option selected value="' + rep + '"');
+}
+
+function setupEventForm(form, ev, admin) {
+  const E = form.elements;
+  const syncRepeat = () => {
+    const sel = E.repeat, oN = sel.querySelector('[value=mN]'), oL = sel.querySelector('[value=mL]');
+    if (E.date.value) {
+      const d = parseKey(E.date.value), dn = DAY_NAMES[d.getDay()], nth = Math.ceil(d.getDate() / 7);
+      const isLast = d.getDate() + 7 > new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+      sel.querySelector('[value=w1]').textContent = `Every ${dn}`;
+      sel.querySelector('[value=w2]').textContent = `Every other ${dn}`;
+      oN.textContent = `Monthly on the ${ORD[nth] || ''} ${dn}`; oN.hidden = oN.disabled = nth > 4;
+      oL.textContent = `Monthly on the last ${dn}`; oL.hidden = oL.disabled = !isLast;
+      if (sel.selectedOptions[0]?.disabled) sel.value = isLast && sel.value === 'mN' ? 'mL' : sel.value === 'mL' && nth <= 4 ? 'mN' : '';
+    }
+    $('[data-until]', form).hidden = !sel.value;
+  };
+  E.date.onchange = syncRepeat; E.repeat.onchange = syncRepeat; syncRepeat();
+
+  if (admin && ev.recur_freq) {
+    const occs = occurrences(ev, startOfDay(new Date()), new Date(Date.now() + 200 * DAY_MS), { withSkipped: true }).slice(0, 16);
+    $('#skips', form).innerHTML = occs.map(o => `<label class="check"><input type="checkbox" name="skip" value="${o.key}" ${o.skipped ? 'checked' : ''}> ${esc(fmtShort(o.start))}</label>`).join('')
+      || '<span class="muted">No upcoming dates.</span>';
+  }
+
+  E.poster.onchange = () => {
+    const f = E.poster.files[0], img = $('#posterPrev', form);
+    if (!f) { img.hidden = true; return; }
+    img.src = URL.createObjectURL(f); img.hidden = false;
+  };
+
+  // map picker
+  let map, marker;
+  const box = $('#pickMap', form), msg = $('#geoMsg', form);
+  const setLL = ll => { E.lat.value = (+ll.lat).toFixed(6); E.lng.value = (+ll.lng).toFixed(6); };
+  async function showMap(center, zoom, placePin) {
+    box.hidden = false;
+    await loadLeaflet();
+    if (!map) {
+      map = L.map(box).setView(center, zoom);
+      state.cleanup.push(() => map.remove());
+      addTiles(map);
+      map.on('click', e => { placeMarker(e.latlng); setLL(e.latlng); msg.textContent = 'Pin placed. Drag it to adjust.'; });
+    } else map.setView(center, zoom);
+    if (placePin) { placeMarker(center); setLL({ lat: center[0], lng: center[1] }); }
+    setTimeout(() => map.invalidateSize(), 60);
+  }
+  function placeMarker(ll) {
+    if (marker) return marker.setLatLng(ll);
+    marker = L.marker(ll, { draggable: true, icon: pinIcon(E.kind.value) }).addTo(map);
+    marker.on('dragend', () => setLL(marker.getLatLng()));
+  }
+  $('#geoBtn', form).onclick = async () => {
+    const q = E.address.value.trim();
+    if (q.length < 5) { msg.textContent = 'Enter the address first.'; return; }
+    msg.textContent = 'Looking up…';
+    try {
+      const r = await geocode(q);
+      if (r) { await showMap([r.lat, r.lng], 16, true); msg.textContent = 'Found it. Drag the pin if it is not quite right.'; }
+      else { await showMap(state.loc || CFG.DEFAULT_CENTER, state.loc ? 11 : CFG.DEFAULT_ZOOM, false); msg.textContent = "Couldn't find that address. Tap the map to place the pin."; }
+    } catch { msg.textContent = 'Address lookup is unavailable right now. You can still submit.'; }
+  };
+  E.address.oninput = () => { if (E.lat.value) { E.lat.value = E.lng.value = ''; marker?.remove(); marker = null; msg.textContent = 'Address changed: press Find on map again.'; } };
+  if (E.lat.value) showMap([+E.lat.value, +E.lng.value], 15, false).then(() => placeMarker([+E.lat.value, +E.lng.value]));
+}
+
+async function geocode(q) {
+  const p = new URLSearchParams({ q, format: 'jsonv2', limit: '1' });
+  if (CFG.GEOCODE_COUNTRIES) p.set('countrycodes', CFG.GEOCODE_COUNTRIES);
+  // Prefer (not require) matches near home, so "120 Main St" finds the local one.
+  const [lat, lng] = CFG.DEFAULT_CENTER;
+  p.set('viewbox', [lng - 1.3, lat + 1, lng + 1.3, lat - 1].join(','));
+  const r = await fetch('https://nominatim.openstreetmap.org/search?' + p, { headers: { 'Accept-Language': navigator.language || 'en' } });
+  if (!r.ok) throw new Error('geocode ' + r.status);
+  const j = await r.json();
+  return j[0] ? { lat: +j[0].lat, lng: +j[0].lon } : null;
+}
+
+function readEventForm(form, admin) {
+  const E = form.elements, errors = [];
+  const t = k => (E[k]?.value || '').trim();
+  if (t('company')) return { bot: true };
+  const ev = { kind: t('kind'), title: t('title'), description: t('description') || null, entry_fee: t('entry_fee') || null,
+    venue_name: t('venue_name') || null, address: t('address'), contact_name: t('contact_name') || null,
+    contact_email: t('contact_email') || null, contact_phone: t('contact_phone') || null,
+    website: t('website') || null, facebook: t('facebook') || null, instagram: t('instagram') || null, tiktok: t('tiktok') || null,
+    submitter_email: t('submitter_email'), lat: t('lat') ? +t('lat') : null, lng: t('lng') ? +t('lng') : null };
+  if (ev.title.length < 3) errors.push('Give the event a name.');
+  if (ev.address.length < 5) errors.push('Enter the address.');
+  if (!EMAIL_RE.test(ev.submitter_email)) errors.push(admin ? 'Submitter email is not valid.' : 'Enter your email so the admin can reach you.');
+  if (ev.contact_email && !EMAIL_RE.test(ev.contact_email)) errors.push('The contact email is not valid.');
+  if (ev.website && !webUrl(ev.website)) errors.push('The website link is not valid.');
+  for (const k of ['facebook', 'instagram', 'tiktok']) if (ev[k] && !socialUrl(k, ev[k])) errors.push(`The ${k} link is not valid.`);
+  if (!t('date') || !t('start')) errors.push('Enter the date and start time.');
+  else {
+    const [y, m, d] = t('date').split('-').map(Number), [sh, sm] = t('start').split(':').map(Number);
+    const start = new Date(y, m - 1, d, sh, sm);
+    let end = null;
+    if (t('end')) { const [eh, em] = t('end').split(':').map(Number); end = new Date(y, m - 1, d, eh, em); if (end <= start) end.setDate(end.getDate() + 1); }
+    ev.start_at = start.toISOString(); ev.end_at = end ? end.toISOString() : null;
+    const rep = t('repeat'), dow = DAYS[start.getDay()];
+    ev.recur_freq = rep ? (rep[0] === 'w' ? 'weekly' : 'monthly') : null;
+    ev.recur_interval = rep === 'w2' ? 2 : 1;
+    ev.recur_byday = !rep ? null : rep[0] === 'w' ? dow : rep === 'mL' ? '-1' + dow : Math.ceil(d / 7) + dow;
+    ev.recur_until = rep && t('until') ? t('until') : null;
+    if (ev.recur_until && ev.recur_until < t('date')) errors.push('"Until" is before the first date.');
+    if (!admin && !rep && (end || new Date(start.getTime() + DEFAULT_DUR)) < new Date()) errors.push('That date has already passed.');
+  }
+  if (admin && E.skip) ev.skip_dates = $$('input[name=skip]', form).filter(c => c.checked).map(c => c.value);
+  return { ev, errors };
+}
+function showFormErrors(form, errors) {
+  const ul = $('#formErr', form);
+  ul.innerHTML = errors.map(e => `<li>${esc(e)}</li>`).join('');
+  ul.hidden = !errors.length;
+  if (errors.length) ul.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ------------------------------------------------------------------ views: submit
+const CONTACT_KEYS = ['contact_name', 'contact_email', 'contact_phone', 'website', 'facebook', 'instagram', 'tiktok', 'submitter_email'];
+function viewSubmit(el) {
+  const remembered = store.get('lastContact', {});
+  el.innerHTML = `<h1>Submit an event</h1>
+    <p class="muted">Cruise nights, car shows and meetups. Every listing is checked before it goes live, usually within a day.</p>
+    ${eventFormHTML({ kind: 'cruise', ...remembered }, false)}`;
+  const form = $('#evForm', el);
+  setupEventForm(form, {}, false);
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const { ev, errors, bot } = readEventForm(form, false);
+    if (bot) return thanks(el);
+    showFormErrors(form, errors);
+    if (errors.length) return;
+    const btn = $('#saveBtn', form); btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      if (ev.lat == null) { const r = await geocode(ev.address).catch(() => null); if (r) { ev.lat = r.lat; ev.lng = r.lng; } }
+      ev.id = uuid();
+      const file = form.elements.poster.files[0];
+      if (file) { btn.textContent = 'Uploading poster…'; ev.poster_path = await uploadPosterFile(file, `pending/${ev.id}`); }
+      await api.submit(ev);
+      store.set('lastContact', Object.fromEntries(CONTACT_KEYS.map(k => [k, ev[k] || ''])));
+      thanks(el);
+    } catch (err) {
+      showFormErrors(form, ['Could not send: ' + (err.message || err)]);
+      btn.disabled = false; btn.textContent = 'Submit for approval';
+    }
+  };
+}
+function thanks(el) {
+  runCleanup();
+  el.innerHTML = `<div class="empty"><h1>Thanks!</h1><p>Your event is in the queue and will show up once it has been approved.</p>
+    <p><a class="btn primary" href="#/">Back to events</a> <button class="btn" id="again">Submit another</button></p></div>`;
+  $('#again', el).onclick = () => viewSubmit(el);
+  window.scrollTo(0, 0);
+}
+
+// ------------------------------------------------------------------ views: admin
+async function adminGate(el) {
+  if (!(await api.session())) {
+    el.innerHTML = `<h1>Admin sign in</h1>${DEMO ? '<p class="muted">Demo mode: any email and password will do.</p>' : ''}
+      <form id="login" class="box">
+        <label>Email <input type="email" name="email" autocomplete="username" required></label>
+        <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+        <p id="loginErr" class="err"></p>
+        <button class="btn primary" style="width:100%">Sign in</button>
+      </form>`;
+    $('#login', el).onsubmit = async e => {
+      e.preventDefault();
+      const f = e.target.elements;
+      try { await api.signIn(f.email.value.trim(), f.password.value); route(); }
+      catch (err) { $('#loginErr', el).textContent = err.message; }
+    };
+    return false;
+  }
+  if (!(await api.isAdmin())) {
+    el.innerHTML = `<div class="empty"><h2>Not an admin</h2><p>This account isn't in the admins table.</p><button class="btn" id="out">Sign out</button></div>`;
+    $('#out', el).onclick = async () => { await api.signOut(); route(); };
+    return false;
+  }
+  return true;
+}
+
+let adminTab = 'pending';
+async function viewAdmin(el) {
+  el.innerHTML = '<p class="empty">Loading…</p>';
+  if (!(await adminGate(el))) return;
+  const [counts, list] = await Promise.all([api.counts(), api.listByStatus(adminTab)]);
+  const label = { pending: 'Pending', approved: 'Live', rejected: 'Rejected' };
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><h1 style="margin-right:auto">Admin</h1><button class="btn small" id="out">Sign out</button></div>
+    <div class="tabs">${Object.keys(label).map(s => `<button class="chip ${s === adminTab ? 'on' : ''}" data-tab="${s}">${label[s]}${s === 'pending' && counts[s] ? `<span class="badge">${counts[s]}</span>` : ` (${counts[s]})`}</button>`).join('')}</div>
+    <div id="admList">${list.length ? list.map(admCardHTML).join('') : `<p class="empty">Nothing ${label[adminTab].toLowerCase()}.</p>`}</div>`;
+  $('#out', el).onclick = async () => { await api.signOut(); route(); };
+  $$('[data-tab]', el).forEach(b => b.onclick = () => { adminTab = b.dataset.tab; viewAdmin(el); });
+  $$('[data-act]', el).forEach(b => b.onclick = async () => {
+    const ev = list.find(x => x.id === b.dataset.id), act = b.dataset.act;
+    // Tap-twice confirm instead of confirm(): some browsers and installed
+    // web apps suppress native dialogs, which made the button do nothing.
+    if ((act === 'reject' || act === 'delete') && !b.dataset.armed) {
+      const label = b.textContent;
+      b.dataset.armed = '1';
+      b.textContent = act === 'reject' ? 'Tap again to reject' : 'Tap again to delete';
+      setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = label; } }, 4000);
+      return;
+    }
+    b.disabled = true;
+    try {
+      if (act === 'approve') {
+        const poster_path = ev.poster_path ? await movePoster(ev.poster_path, 'approved') : null;
+        await api.update(ev.id, { status: 'approved', approved_at: new Date().toISOString(), poster_path });
+        toast('Approved: it is live now.');
+      } else if (act === 'reject') {
+        await removePoster(ev.poster_path);
+        await api.update(ev.id, { status: 'rejected', approved_at: null, poster_path: null });
+      } else if (act === 'unpublish') {
+        await api.update(ev.id, { status: 'pending', approved_at: null });
+      } else if (act === 'delete') {
+        await removePoster(ev.poster_path);
+        await api.remove(ev.id);
+      }
+      state.loadedAt = 0;
+      viewAdmin(el);
+    } catch (err) { toast('Failed: ' + err.message); b.disabled = false; }
+  });
+}
+function admCardHTML(ev) {
+  const s = new Date(ev.start_at), o = nextOcc(ev);
+  const when = ev.recur_freq ? `${recurText(ev)}, ${fmtTime(s)} · from ${fmtShort(s)}` : `${fmtLong(s)}, ${fmtTime(s)}`;
+  const btn = (act, lab, cls = '') => `<button class="btn small ${cls}" data-act="${act}" data-id="${ev.id}">${lab}</button>`;
+  const subj = encodeURIComponent(`Your ${CFG.APP_NAME} listing: ${ev.title}`);
+  return `<div class="adm"><div class="top2"><div class="thumb">${posterHTML(ev, { thumb: true })}</div><div>
+      <span class="kind k-${esc(ev.kind)}">${KINDS[ev.kind]}</span><h3>${esc(ev.title)}</h3>
+      <div class="meta">${esc(when)}${!o ? ' · <b>finished</b>' : ''}</div>
+      <div class="meta">${esc([ev.venue_name, ev.address].filter(Boolean).join(', '))}${ev.lat == null ? ' · <span class="err">no map pin</span>' : ''}</div>
+      <div class="meta">From <a href="mailto:${esc(ev.submitter_email)}?subject=${subj}">${esc(ev.submitter_email)}</a> · ${esc(fmtShort(new Date(ev.created_at)))}</div>
+    </div></div>
+    <div class="btns">
+      ${ev.status === 'pending' ? btn('approve', 'Approve', 'good') : ''}
+      <a class="btn small" href="#/admin/e/${ev.id}">Edit</a>
+      ${ev.status === 'approved' ? `<a class="btn small" href="#/e/${ev.id}">View</a>` + btn('unpublish', 'Unpublish') : ''}
+      ${ev.status !== 'rejected' ? btn('reject', 'Reject', 'danger') : btn('approve', 'Approve', 'good') + btn('delete', 'Delete', 'danger')}
+    </div></div>`;
+}
+
+async function viewAdminEdit(el, id) {
+  el.innerHTML = '<p class="empty">Loading…</p>';
+  if (!(await adminGate(el))) return;
+  const ev = await api.get(id);
+  if (!ev) { el.innerHTML = '<p class="empty">Not found. <a href="#/admin">Back</a></p>'; return; }
+  el.innerHTML = `<p><a href="#/admin">← Admin</a></p><h1>Edit event</h1>
+    <p class="muted">Status: <b>${esc(ev.status)}</b>. Saving keeps the status; approve from the list.</p>${eventFormHTML(ev, true)}`;
+  const form = $('#evForm', el);
+  setupEventForm(form, ev, true);
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const { ev: patch, errors } = readEventForm(form, true);
+    showFormErrors(form, errors);
+    if (errors.length) return;
+    const btn = $('#saveBtn', form); btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      const file = form.elements.poster.files[0];
+      if (file || form.elements.removePoster?.checked) {
+        await removePoster(ev.poster_path); patch.poster_path = null;
+        if (file) patch.poster_path = await uploadPosterFile(file, `${ev.status === 'approved' ? 'approved' : 'pending'}/${ev.id}-${Date.now()}`);
+      }
+      if (patch.skip_dates) {   // keep cancellations that are already in the past
+        const today = dateKey(new Date());
+        patch.skip_dates = [...new Set([...(ev.skip_dates || []).filter(k => k < today), ...patch.skip_dates])].sort();
+      } else if (!patch.recur_freq) patch.skip_dates = [];
+      await api.update(ev.id, patch);
+      state.loadedAt = 0;
+      toast('Saved'); location.hash = '#/admin';
+    } catch (err) { showFormErrors(form, ['Could not save: ' + err.message]); btn.disabled = false; btn.textContent = 'Save changes'; }
+  };
+}
+
+// ------------------------------------------------------------------ router
+const routes = [
+  [/^#?\/?$/, viewList, 'list'],
+  [/^#\/map$/, viewMap, 'map'],
+  [/^#\/e\/([0-9a-f-]{36})(?:\/(\d{4}-\d\d-\d\d))?$/, viewDetail, 'list'],
+  [/^#\/submit$/, viewSubmit, 'submit'],
+  [/^#\/admin$/, viewAdmin, ''],
+  [/^#\/admin\/e\/([0-9a-f-]{36})$/, viewAdminEdit, '']
+];
+function runCleanup() { while (state.cleanup.length) { try { state.cleanup.pop()(); } catch {} } }
+function route() {
+  runCleanup();
+  const h = location.hash || '#/';
+  const el = $('#view');
+  el.className = '';
+  for (const [re, fn, tab] of routes) {
+    const m = re.exec(h);
+    if (!m) continue;
+    $$('.tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
+    window.scrollTo(0, 0);
+    Promise.resolve(fn(el, ...m.slice(1))).catch(err => { el.innerHTML = `<p class="empty err">${esc(err.message || err)}</p>`; });
+    return;
+  }
+  location.hash = '#/';
+}
+
+// ------------------------------------------------------------------ boot
+(async function boot() {
+  document.title = CFG.APP_NAME;
+  $('meta[name=theme-color]').content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  const name = CFG.APP_NAME, cut = name.slice(1).search(/[A-Z]/) + 1;   // CruiseNight -> Cruise<b>Night</b>
+  $('#brandName').innerHTML = cut > 0 ? `${esc(name.slice(0, cut))}<b>${esc(name.slice(cut))}</b>` : esc(name);
+  $('#demoBanner').hidden = !DEMO;
+  try { await api.init(); }
+  catch (err) { $('#view').innerHTML = `<p class="empty err">${esc(err.message)}</p>`; return; }
+  if (store.get('locOk')) requestLocation(true).then(ok => { if (ok) renderList(); });
+  window.addEventListener('hashchange', route);
+  route();
+})();
+
+let installEvt;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
+$('#installBtn').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('#installBtn').hidden = true; };
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.addEventListener('updatefound', () => {
+      const w = reg.installing;
+      w?.addEventListener('statechange', () => {
+        if (w.state === 'installed' && navigator.serviceWorker.controller)
+          toast('A new version is ready.', { label: 'Refresh', run: () => w.postMessage({ type: 'SKIP_WAITING' }) });
+      });
+    });
+  }).catch(() => {});
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloading) { reloading = true; location.reload(); } });
+}
+</script>
+</body>
+</html>

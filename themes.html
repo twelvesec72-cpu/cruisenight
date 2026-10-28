@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>CruiseNight themes</title>
+<style>
+  body { margin: 0; padding: 20px; background: #26282d; color: #eef1f6; font: 15px/1.45 system-ui, sans-serif; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  p.lead { margin: 0 0 18px; color: #b5bcc8; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+  .card { background: #1b1d22; border: 1px solid #3a3d45; border-radius: 16px; padding: 14px; }
+  .card h2 { margin: 0; font-size: 18px; }
+  .card p { margin: 4px 0 10px; color: #b5bcc8; font-size: 14px; min-height: 40px; }
+  .sw { display: flex; gap: 6px; margin-bottom: 10px; }
+  .sw span { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(255,255,255,.2); }
+  .views { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .views button { padding: 6px 11px; min-height: 34px; border-radius: 9px; border: 1px solid #3a3d45; background: #24262c; color: inherit; font: inherit; font-size: 13px; cursor: pointer; }
+  .views button.on { background: #eef1f6; color: #111; }
+  .phone { width: 234px; height: 468px; margin: 0 auto; border-radius: 22px; overflow: hidden; border: 6px solid #000; background: #000; }
+  .phone iframe { width: 390px; height: 780px; border: 0; transform: scale(.6); transform-origin: 0 0; }
+  code { background: #111; padding: 1px 6px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>CruiseNight colour themes</h1>
+<p class="lead">Each phone is the real app running on sample data. Tap the buttons to switch screens.
+  Pick one by setting <code>THEME</code> in <code>config.js</code>.</p>
+<div class="grid" id="grid"></div>
+<script>
+const THEMES = [
+  ['chrome', 'Midnight Chrome', 'Black and polished silver with an electric-blue accent.', ['#0a0b0e', '#1c1f26', '#cfd8e3', '#6ea8ff', '#f472b6']],
+  ['steel', 'Gateway Steel', 'Light theme: stainless arch, navy, pink and violet. Easiest to read outdoors in sun.', ['#f3f5f8', '#ffffff', '#0f1e3d', '#1e40af', '#be185d']],
+  ['neon', 'Route 66 Neon', 'Diner-sign pink and cyan on midnight blue. Cruise-night energy.', ['#0b0f24', '#131a38', '#ff3ea5', '#22d3ee', '#a78bfa']],
+  ['violet', 'Ultraviolet', 'Black-cherry purple with silver and hot pink.', ['#0f0a1a', '#21183a', '#c77dff', '#ff6fb5', '#7dd3fc']]
+];
+const VIEWS = [['Events', '#/'], ['Event', 'first'], ['Map', '#/map'], ['Submit', '#/submit']];
+const grid = document.getElementById('grid');
+for (const [id, name, desc, sw] of THEMES) {
+  const card = document.createElement('section');
+  card.className = 'card';
+  card.innerHTML = `<h2>${name} <small style="color:#8a919c;font-weight:400">(${id})</small></h2><p>${desc}</p>
+    <div class="sw">${sw.map(c => `<span style="background:${c}" title="${c}"></span>`).join('')}</div>
+    <div class="views">${VIEWS.map(([l], i) => `<button data-i="${i}" class="${i ? '' : 'on'}">${l}</button>`).join('')}</div>
+    <div class="phone"><iframe title="${name} preview" src="index.html?demo&theme=${id}#/"></iframe></div>`;
+  const frame = card.querySelector('iframe');
+  card.querySelectorAll('.views button').forEach(b => b.onclick = () => {
+    card.querySelectorAll('.views button').forEach(x => x.classList.toggle('on', x === b));
+    let hash = VIEWS[b.dataset.i][1];
+    if (hash === 'first') {   // open the first event card in that frame
+      const a = frame.contentDocument && frame.contentDocument.querySelector('.card');
+      hash = a ? a.getAttribute('href') : '#/';
+    }
+    frame.contentWindow.location.hash = hash;
+  });
+  grid.appendChild(card);
+}
+</script>
+</body>
+</html>
