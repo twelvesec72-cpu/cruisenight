@@ -37,7 +37,7 @@ create table if not exists public.events (
   id             uuid primary key default gen_random_uuid(),
   status         text not null default 'pending'
                  check (status in ('pending','approved','rejected')),
-  kind           text not null check (kind in ('cruise','show','meetup')),
+  kind           text not null check (kind in ('cruise','show','meetup','swap')),
   title          text not null check (char_length(title) between 3 and 120),
   description    text check (char_length(description) <= 4000),
   start_at       timestamptz not null,

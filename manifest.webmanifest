@@ -1,7 +1,7 @@
 {
-  "name": "CruiseNight",
-  "short_name": "CruiseNight",
-  "description": "Local car cruises, shows and meetups.",
+  "name": "STLCruiseNight",
+  "short_name": "STLCruiseNight",
+  "description": "St. Louis car cruises, shows, meetups and swap meets.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

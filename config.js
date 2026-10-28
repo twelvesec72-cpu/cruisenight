@@ -6,8 +6,8 @@
    to go live. The anon key is meant to be public; the database rules in
    schema.sql are what protect the data. */
 window.CRUISE_CONFIG = {
-  APP_NAME: 'CruiseNight',
-  TAGLINE: 'Local car cruises, shows & meetups',
+  APP_NAME: 'STLCruiseNight',
+  TAGLINE: 'St. Louis cruises, car shows, meetups & swap meets',
 
   // Colour theme: 'chrome', 'steel', 'neon' or 'violet' (compare them on themes.html).
   THEME: 'chrome',

@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0b0e">
-<meta name="description" content="Local car cruises, shows and meetups.">
-<title>CruiseNight</title>
+<meta name="description" content="St. Louis car cruises, shows, meetups and swap meets.">
+<title>STLCruiseNight</title>
+<meta name="apple-mobile-web-app-title" content="STLCruiseNight">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -28,7 +29,7 @@
   color-scheme: dark;
   --bg: #0a0b0e; --surface: #14161b; --surface2: #1c1f26; --line: #2a2e37; --hover-line: #3b404b;
   --text: #f1f3f7; --muted: #a2a9b6; --accent: #6ea8ff; --accent-ink: #06122a; --err: #ffb3c8;
-  --cruise: #6ea8ff; --show: #f472b6; --meetup: #c4b5fd;
+  --cruise: #6ea8ff; --show: #f472b6; --meetup: #c4b5fd; --swap: #2dd4bf;
   --header-bg: rgba(10,11,14,.92); --tab-bg: rgba(20,22,27,.96); --shadow: rgba(0,0,0,.55);
   --good-bg: #12302a; --good-line: #1f5a4c; --good-text: #8ff0d0;
   --bad-bg: #3a1526; --bad-line: #6a2a45; --bad-text: #ffb3c8;
@@ -39,7 +40,7 @@
   color-scheme: light;
   --bg: #f3f5f8; --surface: #ffffff; --surface2: #eef1f5; --line: #d9dee6; --hover-line: #aeb7c4;
   --text: #0f172a; --muted: #475569; --accent: #1e40af; --accent-ink: #ffffff; --err: #b91c1c;
-  --cruise: #1d4ed8; --show: #be185d; --meetup: #6d28d9;
+  --cruise: #1d4ed8; --show: #be185d; --meetup: #6d28d9; --swap: #0f766e;
   --header-bg: rgba(255,255,255,.92); --tab-bg: rgba(255,255,255,.96); --shadow: rgba(15,23,42,.18);
   --good-bg: #dcfce7; --good-line: #86efac; --good-text: #166534;
   --bad-bg: #fee2e2; --bad-line: #fca5a5; --bad-text: #991b1b;
@@ -50,7 +51,7 @@
   color-scheme: dark;
   --bg: #0b0f24; --surface: #131a38; --surface2: #1b2349; --line: #2a3466; --hover-line: #3d4a8a;
   --text: #eef2ff; --muted: #a5b0d6; --accent: #ff3ea5; --accent-ink: #1a0010; --err: #ffb3d0;
-  --cruise: #22d3ee; --show: #ff3ea5; --meetup: #a78bfa;
+  --cruise: #22d3ee; --show: #ff3ea5; --meetup: #a78bfa; --swap: #34d399;
   --header-bg: rgba(11,15,36,.92); --tab-bg: rgba(19,26,56,.96); --shadow: rgba(0,0,0,.55);
   --good-bg: #123a3a; --good-line: #1f6a6a; --good-text: #8ff0e0;
   --bad-bg: #3a1530; --bad-line: #6a2a58; --bad-text: #ffb3dd;
@@ -62,7 +63,7 @@
   color-scheme: dark;
   --bg: #0f0a1a; --surface: #181127; --surface2: #21183a; --line: #33264f; --hover-line: #4a3a70;
   --text: #f4effc; --muted: #b6a9d0; --accent: #c77dff; --accent-ink: #16052a; --err: #ffb3d6;
-  --cruise: #c77dff; --show: #ff6fb5; --meetup: #7dd3fc;
+  --cruise: #c77dff; --show: #ff6fb5; --meetup: #7dd3fc; --swap: #5eead4;
   --header-bg: rgba(15,10,26,.92); --tab-bg: rgba(24,17,39,.96); --shadow: rgba(0,0,0,.55);
   --good-bg: #13302c; --good-line: #22584f; --good-text: #96f0d6;
   --bad-bg: #3d1430; --bad-line: #6d2955; --bad-text: #ffb3d6;
@@ -142,11 +143,12 @@ h2 { font-size: 22px; margin: 22px 0 10px; }
 .ph.k-cruise { background: linear-gradient(150deg, #b9d3ff, #2b5fb8); }
 .ph.k-show { background: linear-gradient(150deg, #ffb3d6, #b0306f); }
 .ph.k-meetup { background: linear-gradient(150deg, #ddd0ff, #6247b0); }
+.ph.k-swap { background: linear-gradient(150deg, #b5f5e8, #1f7f72); }
 .card h3 { margin: 2px 0 4px; font-size: 18px; line-height: 1.2; }
 .meta { color: var(--muted); font-size: 14px; }
 .meta + .meta { margin-top: 2px; }
 .kind { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.kind.k-cruise { color: var(--cruise); } .kind.k-show { color: var(--show); } .kind.k-meetup { color: var(--meetup); }
+.kind.k-cruise { color: var(--cruise); } .kind.k-show { color: var(--show); } .kind.k-meetup { color: var(--meetup); } .kind.k-swap { color: var(--swap); }
 .empty { text-align: center; padding: 40px 10px; color: var(--muted); }
 .foot { text-align: center; margin-top: 30px; font-size: 14px; color: var(--muted); }
 .foot a { color: var(--muted); }
@@ -191,7 +193,7 @@ h2 { font-size: 22px; margin: 22px 0 10px; }
 .locate { position: absolute; z-index: 900; right: 12px; bottom: calc(var(--tabbar) + env(safe-area-inset-bottom) + 16px); }
 .pin span { position: absolute; left: 3px; top: 0; width: 24px; height: 24px; border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
-.pin-cruise span { background: var(--cruise); } .pin-show span { background: var(--show); } .pin-meetup span { background: var(--meetup); }
+.pin-cruise span { background: var(--cruise); } .pin-show span { background: var(--show); } .pin-meetup span { background: var(--meetup); } .pin-swap span { background: var(--swap); }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface2); color: var(--text); }
 .leaflet-popup-content { margin: 12px 14px; font-size: 14px; }
 .leaflet-popup-content b { font-size: 16px; }
@@ -269,7 +271,7 @@ const LIBS = {
   leaflet:  ['https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
              'sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH']
 };
-const KINDS = { cruise: 'Cruise', show: 'Car show', meetup: 'Meetup' };
+const KINDS = { cruise: 'Cruise', show: 'Car show', meetup: 'Meetup', swap: 'Swap meet' };
 const DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ORD = { 1: '1st', 2: '2nd', 3: '3rd', 4: '4th', '-1': 'last' };
@@ -709,6 +711,10 @@ function demoSeed() {
       description: 'Judged show, 30 classes, dash plaques for the first 150 cars.\nRegistration 8–10 am.',
       entry_fee: '$20 show car · spectators free', contact_name: 'Fall Classic Committee', contact_email: 'info@example.com',
       website: 'https://example.com/fallclassic', facebook: 'https://facebook.com/fallclassic', tiktok: '@fallclassic' },
+    { ...base, id: uuid(), kind: 'swap', title: 'Gateway Parts Swap Meet', start_at: iso(at(17, 7)), end_at: iso(at(17, 14)),
+      venue_name: 'Fairgrounds North Lot', address: '2 Fairground Rd', lat: lat + 0.07, lng: lng + 0.02,
+      description: 'Parts, tools, signs and project cars. Vendor spaces $25, buyers free.\nEarly birds from 6 am.',
+      entry_fee: 'Free to shop · $25 vendor space', contact_email: 'swap@example.com', facebook: 'gatewayswapmeet' },
     { ...base, id: uuid(), kind: 'meetup', title: 'JDM Night Meet', start_at: iso(at(toDow(5) + 7, 20)), end_at: iso(at(toDow(5) + 7, 23)),
       venue_name: 'Eastgate Plaza (back lot)', address: '3100 Eastgate Blvd', lat: lat - 0.05, lng: lng - 0.08,
       description: 'Respect the spot. No revving, no burnouts, or we lose the lot.', instagram: 'jdmnightmeet', tiktok: 'jdmnightmeet' },
@@ -1145,7 +1151,7 @@ const CONTACT_KEYS = ['contact_name', 'contact_email', 'contact_phone', 'website
 function viewSubmit(el) {
   const remembered = store.get('lastContact', {});
   el.innerHTML = `<h1>Submit an event</h1>
-    <p class="muted">Cruise nights, car shows and meetups. Every listing is checked before it goes live, usually within a day.</p>
+    <p class="muted">Cruise nights, car shows, meetups and swap meets. Every listing is checked before it goes live, usually within a day.</p>
     ${eventFormHTML({ kind: 'cruise', ...remembered }, false)}`;
   const form = $('#evForm', el);
   setupEventForm(form, {}, false);
@@ -1327,8 +1333,9 @@ function route() {
 (async function boot() {
   document.title = CFG.APP_NAME;
   $('meta[name=theme-color]').content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-  const name = CFG.APP_NAME, cut = name.slice(1).search(/[A-Z]/) + 1;   // CruiseNight -> Cruise<b>Night</b>
-  $('#brandName').innerHTML = cut > 0 ? `${esc(name.slice(0, cut))}<b>${esc(name.slice(cut))}</b>` : esc(name);
+  // STLCruiseNight -> <b>STL</b>Cruise<b>Night</b>: every other word in the accent colour
+  const words = CFG.APP_NAME.match(/[A-Z]+(?=[A-Z][a-z])|[A-Z]?[a-z]+|[A-Z]+|\d+/g) || [CFG.APP_NAME];
+  $('#brandName').innerHTML = words.map((w, i) => i % 2 ? esc(w) : `<b>${esc(w)}</b>`).join('');
   $('#demoBanner').hidden = !DEMO;
   try { await api.init(); }
   catch (err) { $('#view').innerHTML = `<p class="empty err">${esc(err.message)}</p>`; return; }

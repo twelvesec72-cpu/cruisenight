@@ -1,7 +1,7 @@
 /* CruiseNight service worker.
    BUMP CACHE ON EVERY DEPLOY or installed phones keep serving the old app.
    POSTERS is deliberately never bumped, so posters survive a deploy. */
-const CACHE = 'cn-v4';
+const CACHE = 'cn-v5';
 const POSTERS = 'cn-posters-v1';
 
 const SHELL = [
@@ -80,7 +80,7 @@ self.addEventListener('fetch', event => {
       } catch (err) {
         return (await cache.match(req.mode === 'navigate' ? './index.html' : req)) ||
                (await cache.match('./')) ||
-               new Response('Offline and no cached copy of CruiseNight.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
+               new Response('Offline and no cached copy of STLCruiseNight.', { status: 503, headers: { 'Content-Type': 'text/plain' } });
       }
     })());
     return;
